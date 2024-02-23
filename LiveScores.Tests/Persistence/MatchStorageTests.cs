@@ -83,4 +83,78 @@ public class MatchStorageTests
         Assert.False(getResult.IsSuccess);
         Assert.NotNull(getResult.Errors);
     }
+
+    [Fact]
+    public void Add_DuplicateKey_ReturnsFalse()
+    {
+        // arrange
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
+        Guid id = match.Id;
+        var match2 = new Match("team1", "team2", DateTime.Now);
+        match2 = match2 with { Id = id };
+
+        // act
+        PersistedResult<bool> addFirstResult = storage.Add(match);
+        PersistedResult<bool> addSecondResult = storage.Add(match2);
+
+        // assert
+        Assert.True(addFirstResult.IsSuccess);
+        Assert.True(addFirstResult.Data);
+        Assert.False(addSecondResult.IsSuccess);
+        Assert.False(addSecondResult.Data);
+        Assert.NotNull(addSecondResult.Errors);
+    }
+
+    [Fact]
+    public void Get_NotExistingMatch_ReturnsNull()
+    {
+        //arrange
+        var storage = new MatchStorage();
+        Guid id = Guid.NewGuid();
+
+        // act
+        PersistedResult<Match?> result = storage.Get(id);
+
+        // assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Errors);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public void Update_NotExistingMatch_ReturnsFalse()
+    {
+        // arrange
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
+        Guid id = match.Id;
+        byte updatedHomeTeamScore = 1;
+        byte updatedAwayTeamScore = 0;
+        match.UpdateScore(updatedHomeTeamScore, updatedAwayTeamScore);
+
+        // act
+        PersistedResult<bool> updateResult = storage.Update(match);
+
+        //assert
+        Assert.False(updateResult.IsSuccess);
+        Assert.False(updateResult.Data);
+        Assert.NotNull(updateResult.Errors);
+    }
+
+    [Fact]
+    public void Delete_NotExistingMatch_ReturnsFalse()
+    {
+        // arrange
+        var storage = new MatchStorage();
+        Guid id = Guid.NewGuid();
+
+        // act
+        PersistedResult<bool> deleteResult = storage.Delete(id);
+
+        // assert
+        Assert.False(deleteResult.Data);
+        Assert.False(deleteResult.IsSuccess);
+        Assert.NotNull(deleteResult.Errors);
+    }
 }
