@@ -11,22 +11,23 @@ public class MatchStorageTests
     public void Add_ValidMatch_ReturnsTrue()
     {
         // arrange
-        var storage = new SortedMatchStorage();
-        var match = new Match("team1", "team2");
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
 
         // act
-        bool result = storage.Add(match);
+        PersistedResult<bool> result = storage.Add(match);
 
         // assert
-        Assert.True(result);
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
     }
 
     [Fact]
     public void Get_ExistingMatch_ReturnsMatch()
     {
         //arrange
-        var storage = new SortedMatchStorage();
-        var match = new Match("team1", "team2");
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
         Guid id = match.Id;
         storage.Add(match);
 
@@ -43,8 +44,8 @@ public class MatchStorageTests
     public void Update_ExistingMatch_ReturnsTrue()
     {
         // arrange
-        var storage = new SortedMatchStorage();
-        var match = new Match("team1", "team2");
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
         Guid id = match.Id;
         storage.Add(match);
         byte updatedHomeTeamScore = 1;
@@ -52,11 +53,12 @@ public class MatchStorageTests
         match.UpdateScore(updatedHomeTeamScore, updatedAwayTeamScore);
 
         // act
-        bool updateResult = storage.Update(id, m => m.UpdateScore(updatedHomeTeamScore, updatedAwayTeamScore));
+        PersistedResult<bool> updateResult = storage.Update(match);
         PersistedResult<Match?> getResult = storage.Get(id);
 
         //assert
-        Assert.True(updateResult);
+        Assert.True(updateResult.IsSuccess);
+        Assert.True(updateResult.Data);
         Assert.True(getResult.IsSuccess);
         Assert.Null(getResult.Errors);
         Assert.Equal(getResult.Data, match);
@@ -66,17 +68,18 @@ public class MatchStorageTests
     public void Delete_ExistingMatch_ReturnsTrue()
     {
         // arrange
-        var storage = new SortedMatchStorage();
-        var match = new Match("team1", "team2");
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
         Guid id = match.Id;
         storage.Add(match);
 
         // act
-        bool deleteResult = storage.Delete(id);
+        PersistedResult<bool> deleteResult = storage.Delete(id);
         PersistedResult<Match?> getResult = storage.Get(id);
 
         // assert
-        Assert.True(deleteResult);
+        Assert.True(deleteResult.Data);
+        Assert.True(deleteResult.IsSuccess);
         Assert.False(getResult.IsSuccess);
         Assert.NotNull(getResult.Errors);
     }
