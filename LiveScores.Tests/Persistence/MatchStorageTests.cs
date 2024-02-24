@@ -15,7 +15,7 @@ public class MatchStorageTests
         var match = new Match("team1", "team2", DateTime.Now);
 
         // act
-        PersistedResult<bool> result = storage.Add(match);
+        OperationResult<bool> result = storage.Add(match);
 
         // assert
         Assert.True(result.IsSuccess);
@@ -32,7 +32,7 @@ public class MatchStorageTests
         storage.Add(match);
 
         // act
-        PersistedResult<Match?> result = storage.Get(id);
+        OperationResult<Match?> result = storage.Get(id);
             
         // assert
         Assert.True(result.IsSuccess);
@@ -53,8 +53,8 @@ public class MatchStorageTests
         match.UpdateScore(updatedHomeTeamScore, updatedAwayTeamScore);
 
         // act
-        PersistedResult<bool> updateResult = storage.Update(match);
-        PersistedResult<Match?> getResult = storage.Get(id);
+        OperationResult<bool> updateResult = storage.Update(match);
+        OperationResult<Match?> getResult = storage.Get(id);
 
         //assert
         Assert.True(updateResult.IsSuccess);
@@ -74,8 +74,8 @@ public class MatchStorageTests
         storage.Add(match);
 
         // act
-        PersistedResult<bool> deleteResult = storage.Delete(id);
-        PersistedResult<Match?> getResult = storage.Get(id);
+        OperationResult<bool> deleteResult = storage.Delete(id);
+        OperationResult<Match?> getResult = storage.Get(id);
 
         // assert
         Assert.True(deleteResult.Data);
@@ -95,8 +95,8 @@ public class MatchStorageTests
         match2 = match2 with { Id = id };
 
         // act
-        PersistedResult<bool> addFirstResult = storage.Add(match);
-        PersistedResult<bool> addSecondResult = storage.Add(match2);
+        OperationResult<bool> addFirstResult = storage.Add(match);
+        OperationResult<bool> addSecondResult = storage.Add(match2);
 
         // assert
         Assert.True(addFirstResult.IsSuccess);
@@ -114,7 +114,7 @@ public class MatchStorageTests
         Guid id = Guid.NewGuid();
 
         // act
-        PersistedResult<Match?> result = storage.Get(id);
+        OperationResult<Match?> result = storage.Get(id);
 
         // assert
         Assert.False(result.IsSuccess);
@@ -134,7 +134,7 @@ public class MatchStorageTests
         match.UpdateScore(updatedHomeTeamScore, updatedAwayTeamScore);
 
         // act
-        PersistedResult<bool> updateResult = storage.Update(match);
+        OperationResult<bool> updateResult = storage.Update(match);
 
         //assert
         Assert.False(updateResult.IsSuccess);
@@ -150,7 +150,7 @@ public class MatchStorageTests
         Guid id = Guid.NewGuid();
 
         // act
-        PersistedResult<bool> deleteResult = storage.Delete(id);
+        OperationResult<bool> deleteResult = storage.Delete(id);
 
         // assert
         Assert.False(deleteResult.Data);

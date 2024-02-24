@@ -4,11 +4,11 @@ namespace LiveScores.Application.Contracts;
 
 public interface IMatchStorage
 {
-    PersistedResult<Match?> Get(Guid id);
+    OperationResult<Match?> Get(Guid id);
 
-    PersistedResult<bool> Add(Match match);
+    OperationResult<bool> Add(Match match);
 
-    PersistedResult<bool> Delete(Guid id);
+    OperationResult<bool> Delete(Guid id);
 
-    PersistedResult<bool> Update(Match match);
+    OperationResult<bool> Update(Match match);
 }
