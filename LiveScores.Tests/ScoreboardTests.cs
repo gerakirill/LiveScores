@@ -1,6 +1,7 @@
 ﻿using LiveScores.Application.Contracts;
 using LiveScores.Persistence;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -63,7 +64,7 @@ namespace LiveScores.Tests
                 matchesToAdd.Add(new ($"home{i}", $"away{i}", DateTime.Now));
             }
 
-            List<bool> results = [];
+            ConcurrentBag<bool> results = [];
             // act
             Parallel.ForEach(matchesToAdd, match =>
             {
@@ -71,8 +72,8 @@ namespace LiveScores.Tests
                 results.Add(result.IsSuccess);
             });
 
-
             // assert
+            Assert.Equal(results.Count, 1000);
             Assert.All(results, Assert.True);
         }
 
@@ -93,6 +94,23 @@ namespace LiveScores.Tests
         }
 
         [Fact]
+        public void UpdateScore_NotExistingMatch_ReturnsFalse()
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            // act
+            OperationResult<bool> updateScoreResult = 
+                scoreBoard
+                    .UpdateScore(Guid.NewGuid(), 1, 0);
+
+            // assert
+            Assert.False(updateScoreResult.IsSuccess);
+            Assert.False(updateScoreResult.Data);
+            Assert.NotNull(updateScoreResult.Errors);
+        }
+
+        [Fact]
         public void FinishMatch_ExistingMatch_ReturnsTrue()
         {
             // arrange
@@ -106,6 +124,54 @@ namespace LiveScores.Tests
             Assert.True(finishMatchResult.IsSuccess);
             Assert.True(finishMatchResult.Data);
             Assert.Null(finishMatchResult.Errors);
+        }
+
+        [Fact]
+        public void FinishMatch_NotExistingMatch_ReturnsFalse()
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            // act
+            OperationResult<bool> finishMatchResult = scoreBoard.FinishMatch(Guid.NewGuid());
+
+            // assert
+            Assert.False(finishMatchResult.IsSuccess);
+            Assert.False(finishMatchResult.Data);
+            Assert.NotNull(finishMatchResult.Errors);
+        }
+
+        [Fact]
+        public void FinishMatch_ConcurrentWrite_ReturnsResult()
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            var matchesToAdd = new List<Tuple<string, string, DateTime>>();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                matchesToAdd.Add(new($"home{i}", $"away{i}", DateTime.Now));
+            }
+
+            ConcurrentBag<Guid> ids = [];
+            ConcurrentBag<bool> results = [];
+            // act
+            Parallel.ForEach(matchesToAdd, match =>
+            {
+                var result = scoreBoard.AddMatch(match.Item1, match.Item2, match.Item3);
+                ids.Add(result.Data.Value);
+            });
+
+            Parallel.ForEach(ids, id =>
+            {
+                var result = scoreBoard.FinishMatch(id);
+                results.Add(result.IsSuccess);
+            });
+
+            // assert
+            Assert.Equal(results.Count, 1000);
+            Assert.All(results, Assert.True);
         }
 
         [Fact]

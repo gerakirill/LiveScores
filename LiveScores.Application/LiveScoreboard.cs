@@ -49,7 +49,23 @@ namespace LiveScores.Application
 
         public OperationResult<bool> FinishMatch(Guid matchId)
         {
-            throw new NotImplementedException();
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                var getOperationResult = storage.Get(matchId);
+                if (getOperationResult.IsSuccess)
+                {
+                    storage.Delete(matchId);
+                    _teamsPlaying.Remove(getOperationResult.Data.HomeTeam);
+                    _teamsPlaying.Remove(getOperationResult.Data.AwayTeam);
+                    return new OperationResult<bool>(true, true, null);
+                }
+                return new OperationResult<bool>(false, false, getOperationResult.Errors);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
         }
 
         public OperationResult<MatchDto[]> GetLiveMatches()
