@@ -157,4 +157,25 @@ public class MatchStorageTests
         Assert.False(deleteResult.IsSuccess);
         Assert.NotNull(deleteResult.Errors);
     }
+
+    [Fact]
+    public void GetAll_ValidMatches_ReturnsResults()
+    {
+        // arrange
+        var storage = new MatchStorage();
+        var match = new Match("team1", "team2", DateTime.Now);
+        var match2 = new Match("team1", "team2", DateTime.Now);
+        var match3 = new Match("team1", "team2", DateTime.Now);
+
+        // act
+        OperationResult<bool> addResult = storage.Add(match);
+        OperationResult<bool> addResult2 = storage.Add(match2);
+        OperationResult<bool> addResult3 = storage.Add(match3);
+
+        OperationResult<Match[]> getAllResult = storage.GetAll();
+
+        // assert
+        Assert.True(getAllResult.IsSuccess);
+        Assert.Equal(getAllResult.Data.Length, 3);
+    }
 }

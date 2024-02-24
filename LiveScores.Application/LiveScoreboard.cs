@@ -70,7 +70,8 @@ namespace LiveScores.Application
 
         public OperationResult<MatchDto[]> GetLiveMatches()
         {
-            throw new NotImplementedException();
+            throw new AbandonedMutexException();
+            //storage.Get()
         }
     }
 }

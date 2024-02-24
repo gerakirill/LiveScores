@@ -11,4 +11,6 @@ public interface IMatchStorage
     OperationResult<bool> Delete(Guid id);
 
     OperationResult<bool> Update(Match match);
+
+    OperationResult<Match[]> GetAll();
 }

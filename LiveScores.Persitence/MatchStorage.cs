@@ -8,7 +8,6 @@ public class MatchStorage : IMatchStorage
 {
     private readonly ConcurrentDictionary<Guid, Match> _storage = new();
 
-
     public OperationResult<Match?> Get(Guid id)
     {
         bool operationResult = _storage.TryGetValue(id, out Match match);
@@ -46,5 +45,11 @@ public class MatchStorage : IMatchStorage
             return new OperationResult<bool>(false, false, new Dictionary<string, string> { { "UpdateFailed", "Update operation failed" } });
 
         return new OperationResult<bool>(true, true, null);
+    }
+
+    public OperationResult<Match[]> GetAll()
+    {
+        var result = _storage.Values.ToArray();
+        return new OperationResult<Match[]>(result, true, null);
     }
 }
