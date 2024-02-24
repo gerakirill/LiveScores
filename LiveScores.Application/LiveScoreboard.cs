@@ -38,7 +38,13 @@ namespace LiveScores.Application
 
         public OperationResult<bool> UpdateScore(Guid matchId, byte newHomeTeamScore, byte newAwayTeamScore)
         {
-            throw new NotImplementedException();
+            var getOperationResult = storage.Get(matchId);
+            if (getOperationResult.IsSuccess)
+            {
+                storage.Update(getOperationResult.Data);
+                return new OperationResult<bool>(true, true, null);
+            }
+            return new OperationResult<bool>(false, false, getOperationResult.Errors);
         }
 
         public OperationResult<bool> FinishMatch(Guid matchId)
