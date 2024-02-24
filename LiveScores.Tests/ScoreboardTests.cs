@@ -17,7 +17,7 @@ namespace LiveScores.Tests
         public void AddMatch_ValidMatch_ReturnsGuid()
         {
             // arrange
-            var scoreBoard = new LiveScoreboard();
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
 
             // act
             OperationResult<Guid?> result = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
@@ -28,11 +28,59 @@ namespace LiveScores.Tests
             Assert.Null(result.Errors);
         }
 
+        [Theory]
+        [InlineData("team1", "team2")]
+        [InlineData("team3", "team2")]
+        [InlineData("team1", "team3")]
+        public void AddMatch_DuplicateTeams_ReturnsError(string homeTeam, string awayTeam)
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            // act
+            OperationResult<Guid?> result = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
+            OperationResult<Guid?> result2 = scoreBoard.AddMatch(homeTeam, awayTeam, DateTime.Now);
+
+            // assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(result.Data);
+            Assert.Null(result.Errors);
+            Assert.False(result2.IsSuccess);
+            Assert.Null(result2.Data);
+            Assert.NotNull(result2.Errors);
+        }
+
+        [Fact]
+        public void AddMatch_ConcurrentWrite_ReturnsResult()
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            var matchesToAdd = new List<Tuple<string, string, DateTime>>();
+            
+            for (int i = 0; i < 1000; i++)
+            {
+                matchesToAdd.Add(new ($"home{i}", $"away{i}", DateTime.Now));
+            }
+
+            List<bool> results = [];
+            // act
+            Parallel.ForEach(matchesToAdd, match =>
+            {
+                var result = scoreBoard.AddMatch(match.Item1, match.Item2, match.Item3);
+                results.Add(result.IsSuccess);
+            });
+
+
+            // assert
+            Assert.All(results, Assert.True);
+        }
+
         [Fact]
         public void UpdateScore_ValidScore_ReturnsTrue()
         {
             // arrange
-            var scoreBoard = new LiveScoreboard();
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
 
             // act
             OperationResult<Guid?> addResult = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
@@ -48,7 +96,7 @@ namespace LiveScores.Tests
         public void FinishMatch_ExistingMatch_ReturnsTrue()
         {
             // arrange
-            var scoreBoard = new LiveScoreboard();
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
 
             // act
             OperationResult<Guid?> addResult = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
@@ -64,7 +112,7 @@ namespace LiveScores.Tests
         public void GetLiveMatches_SortedByScore_ReturnsSorted()
         {
             // arrange
-            var scoreBoard = new LiveScoreboard();
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
 
             // act
             OperationResult<Guid?> addResult = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
@@ -92,7 +140,7 @@ namespace LiveScores.Tests
         public void GetLiveMatches_SortedByScoreThenByDate_ReturnsSorted()
         {
             // arrange
-            var scoreBoard = new LiveScoreboard();
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
 
             // act
             OperationResult<Guid?> addResult = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
