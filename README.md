@@ -24,7 +24,8 @@
 - Get Live Matches
 
 ## Usage
-`public interface ILiveScoreboard
+```
+public interface ILiveScoreboard
 {
     OperationResult<Guid?> AddMatch(string homeTeam, string awayTeam, DateTime started);
 
@@ -33,10 +34,9 @@
     OperationResult<bool> FinishMatch(Guid matchId);
 
     OperationResult<MatchDto[]> GetLiveMatches();
-}`
-
-`public record OperationResult<T>(T? Data, bool IsSuccess, IDictionary<string, string>? Errors);`
-
+}
+public record OperationResult<T>(T? Data, bool IsSuccess, IDictionary<string, string>? Errors);
+```
 ## Project Status
 Project is:_complete_
 
@@ -46,4 +46,4 @@ Project is:_complete_
 - LiveScores UI 
 
 ## Contact
-Created by [@gerakirill] - feel free to contact me!
+Created by @gerakirill - feel free to contact me!
