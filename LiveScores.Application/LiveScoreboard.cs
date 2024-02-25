@@ -41,6 +41,7 @@ namespace LiveScores.Application
             var getOperationResult = storage.Get(matchId);
             if (getOperationResult.IsSuccess)
             {
+                getOperationResult.Data.UpdateScore(newHomeTeamScore, newAwayTeamScore);
                 storage.Update(getOperationResult.Data);
                 return new OperationResult<bool>(true, true, null);
             }
@@ -70,8 +71,19 @@ namespace LiveScores.Application
 
         public OperationResult<MatchDto[]> GetLiveMatches()
         {
-            throw new AbandonedMutexException();
-            //storage.Get()
+            var getAllResult = storage.GetAll();
+            if (getAllResult.IsSuccess)
+            {
+                var matches = 
+                    getAllResult.Data
+                        .Select(x => new MatchDto(x.Id, x.HomeTeam, x.AwayTeam, x.HomeTeamScore, x.AwayTeamScore, x.DateStarted))
+                        .OrderByDescending(x => x.AwayTeamScore + x.HomeTeamScore)
+                        .ThenBy(x => x.Started)
+                        .ToArray();
+                return new OperationResult<MatchDto[]>(matches, true, null);
+            }
+
+            return new OperationResult<MatchDto[]>(null, false, getAllResult.Errors);
         }
     }
 }

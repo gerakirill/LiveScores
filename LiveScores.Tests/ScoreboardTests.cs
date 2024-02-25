@@ -1,13 +1,7 @@
 ﻿using LiveScores.Application.Contracts;
 using LiveScores.Persistence;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LiveScores.Application;
-using LiveScores.Domain.Entities;
 using Xunit;
 
 namespace LiveScores.Tests
@@ -82,15 +76,21 @@ namespace LiveScores.Tests
         {
             // arrange
             var scoreBoard = new LiveScoreboard(new MatchStorage());
+            byte expectedHomeTeamScore = 1;
+            byte expectedAwayTeamScore = 2;
 
             // act
             OperationResult<Guid?> addResult = scoreBoard.AddMatch("team1", "team2", DateTime.Now);
-            OperationResult<bool> updateScoreResult = scoreBoard.UpdateScore(addResult.Data.Value,1, 0);
+            OperationResult<bool> updateScoreResult = scoreBoard.UpdateScore(addResult.Data.Value, expectedHomeTeamScore, expectedAwayTeamScore);
+            OperationResult<MatchDto[]> getMatchesResult = scoreBoard.GetLiveMatches();
 
             // assert
             Assert.True(updateScoreResult.IsSuccess);
             Assert.True(updateScoreResult.Data);
             Assert.Null(updateScoreResult.Errors);
+            Assert.True(getMatchesResult.IsSuccess);
+            Assert.Equal(getMatchesResult.Data.First().HomeTeamScore, expectedHomeTeamScore);
+            Assert.Equal(getMatchesResult.Data.First().AwayTeamScore, expectedAwayTeamScore);
         }
 
         [Fact]
@@ -229,5 +229,40 @@ namespace LiveScores.Tests
             Assert.Null(getMatchesResult.Errors);
             Assert.Equal(expectedOrder, getMatchesResult.Data.Select(m => m.Id));
         }
+
+        [Fact]
+        public void GetLiveMatches_ConcurrentAccess_ReturnsResult()
+        {
+            // arrange
+            var scoreBoard = new LiveScoreboard(new MatchStorage());
+
+            var matchesToAdd = new List<Tuple<string, string, DateTime>>();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                matchesToAdd.Add(new($"home{i}", $"away{i}", DateTime.Now));
+            }
+
+            ConcurrentBag<Guid> ids = [];
+            ConcurrentBag<bool> results = [];
+            // act
+            Parallel.ForEach(matchesToAdd, match =>
+            {
+                var result = scoreBoard.AddMatch(match.Item1, match.Item2, match.Item3);
+                ids.Add(result.Data.Value);
+            });
+
+            Parallel.ForEach(ids, id =>
+            {
+                var result = scoreBoard.GetLiveMatches();
+                results.Add(result.IsSuccess);
+                Assert.Equal(1000, result.Data.Length);
+            });
+
+            // assert
+            Assert.Equal(1000, results.Count);
+            Assert.All(results, Assert.True);
+        }
     }
 }
+
