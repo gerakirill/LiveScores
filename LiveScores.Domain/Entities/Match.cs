@@ -2,7 +2,7 @@
 {
     public record Match(string HomeTeam, string AwayTeam, DateTime DateStarted)
     {
-        public Guid Id { get; init; } = new Guid();
+        public Guid Id { get; init; } = Guid.NewGuid();
 
         public byte HomeTeamScore { get; private set; } = 0;
 
