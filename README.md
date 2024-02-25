@@ -18,7 +18,6 @@
 - xUnit 2.7.0
 
 ## Features
-List the ready features here:
 - Add Match
 - Finish Match
 - Update Score
@@ -34,9 +33,9 @@ List the ready features here:
     OperationResult<bool> FinishMatch(Guid matchId);
 
     OperationResult<MatchDto[]> GetLiveMatches();
-}
+}`
 
-public record OperationResult<T>(T? Data, bool IsSuccess, IDictionary<string, string>? Errors);`
+`public record OperationResult<T>(T? Data, bool IsSuccess, IDictionary<string, string>? Errors);`
 
 ## Project Status
 Project is:_complete_
@@ -47,4 +46,4 @@ Project is:_complete_
 - LiveScores UI 
 
 ## Contact
-Created by [@gerakirill](kir.gera@gmail.com) - feel free to contact me!
+Created by [@gerakirill] - feel free to contact me!
